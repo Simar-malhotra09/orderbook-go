@@ -7,8 +7,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Price int32
-type Quantity =decimal.Decimal
+type Price = decimal.Decimal
+type Quantity = decimal.Decimal
 type OrderId int64
 
 type Order struct {
@@ -62,7 +62,7 @@ func (o *Order) Fill(quantity Quantity) error {
 }
 
 
-func newOrder(orderId OrderId, side Side, orderType OrderType, price Price, initialQuantity Quantity, remainingQuantity Quantity) *Order {
+func NewOrder(orderId OrderId, side Side, orderType OrderType, price Price, initialQuantity Quantity, remainingQuantity Quantity) *Order {
     return &Order{
         orderId:           orderId,
         side:              side,
