@@ -1,11 +1,19 @@
 package orderbook
 
 import (
-	"container/list"
+	"github.com/shopspring/decimal"
 )
 
-type OrderBook struct{
-	orders  map[string]*list.Element
-	asks *OrderSide
-	bids *OrderSide
+type OrderBook struct {
+	asks map[decimal.Decimal]*OrderQueue 
+	bids map[decimal.Decimal]*OrderQueue 
+
 }
+
+func NewOrderBook() *OrderBook {
+	return &OrderBook{
+		asks: make(map[decimal.Decimal]*OrderQueue),
+		bids: make(map[decimal.Decimal]*OrderQueue),
+	}
+}
+
