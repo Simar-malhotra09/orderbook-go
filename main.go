@@ -1,56 +1,122 @@
 package main
 
 import (
-	"fmt"
-
 	"Desktop/projects/order-book-simulation/go/orderbook"
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
 
-
 func main() {
-	// Initialize an OrderQueue with a specific price level
-	price := decimal.NewFromFloat(100.0)
-	orderQueue := orderbook.NewOrderQueue(price)
 
-	// Create initial orders and append them to the queue
-	order1 := orderbook.NewOrder(1, orderbook.Buy, orderbook.GoodTillCancel, price, decimal.NewFromFloat(5.0), decimal.NewFromFloat(5.0))
-	order2 := orderbook.NewOrder(2, orderbook.Sell, orderbook.FillAndKill, price, decimal.NewFromFloat(3.0), decimal.NewFromFloat(3.0))
+	// Create a new OrderSide for asks and bids in the order book
+	asks := orderbook.NewOrderSide()
+	bids := orderbook.NewOrderSide()
+	_ = bids
 
-	orderQueue.Append(order1)
-	element := orderQueue.Append(order2) // Keep reference to this element to update it
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("Enter trades  or 'exit' to quit:")
 
-	// Print initial state of the queue
-	fmt.Println("Initial Order Queue:")
-	fmt.Println(orderQueue)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "exit" {
+			break
+		}
 
-	// Create a new order to replace order2
-	newOrder := orderbook.NewOrder(2, orderbook.Sell, orderbook.FillAndKill, price, decimal.NewFromFloat(4.0), decimal.NewFromFloat(4.0))
+		fields := strings.Fields(line)
+		// first two fields will always be the action and orderId.
+		// actions are referred by their assigned string literals:
+		// A -> Add order
+		// M -> Modify order
+		// C -> Cancel order
 
-	// Use Update to replace order2 with the new order
-	orderQueue.Update(element, newOrder)
+		action := fields[0]
+		orderId, err := strconv.ParseInt(fields[1], 10, 64)  // Convert orderId to int64
+		if err != nil {
+			log.Fatalf("Failed to parse orderId: %v", err)
+		}
+		
 
-	// Print updated state of the queue
-	fmt.Println("Updated Order Queue:")
-	fmt.Println(orderQueue)
+		if action == "A" {
+			// To add order, first figure out which side
+			// of the orderbook to add to
+			var side orderbook.Side
+			if fields[2] == "B" {
+				side = orderbook.Buy
+			} else {
+				side = orderbook.Sell
+			}
+		    
+			
+			price, err := decimal.NewFromString(fields[3])
+			if err != nil {
+				log.Fatalf("Failed to parse price: %v", err)
+			}
+		
+			quantity, err := decimal.NewFromString(fields[4])
+			if err != nil {
+				log.Fatalf("Failed to parse quantity: %v", err)
+			}
+		
+			// Create the new order
+			// Order type is arbitary right now
+			newOrder := orderbook.NewOrder(orderbook.OrderId(orderId), side, orderbook.GoodTillCancel, price, quantity, quantity)
+			fmt.Printf("Created new order:")
+
+
+			// Print the JSON representation
+			orderJSON, err := json.Marshal(newOrder)
+			if err != nil {
+				log.Fatalf("Error marshaling order to JSON: %v", err)
+			}
+			fmt.Println("Order JSON:", string(orderJSON))
+
+
+            // add order to correct side
+			
+			if side == orderbook.Buy{
+				bids.Append(newOrder)
+				//  Marshal the order to JSON
+				bidsJSON, err := json.Marshal(bids)
+				if err != nil {
+					log.Fatalf("Error marshaling order to JSON: %v", err)
+				}
+	
+				// Print the JSON representation
+				fmt.Println("bids JSON:", string(bidsJSON))
+
+			}else{
+				asks.Append(newOrder)
+				//  Marshal the order to JSON
+				asksJSON, err := json.Marshal(asks)
+				if err != nil {
+					log.Fatalf("Error marshaling order to JSON: %v", err)
+				}
+	
+				// Print the JSON representation
+				fmt.Println("asks JSON:", string(asksJSON))
+				
+			}
+
+
+
+
+
+
+
+		} else {
+			continue
+		}
+
+
+
+		
+		fmt.Println("Received input:", line)
+	}
 }
-// func main() {
-//     // Create an example order
-//     order := orderbook.NewOrder(
-//         1, // Order ID
-//         orderbook.Buy, // Side (using the Buy constant)
-//         orderbook.GoodTillCancel, // Order Type (using the GoodTillCancel constant)
-//         decimal.NewFromFloat(100.50), // Price
-//         decimal.NewFromInt(10), // Initial Quantity
-//         decimal.NewFromInt(10), // Remaining Quantity
-//     )
-
-//     // Display the order details
-//     fmt.Printf("Order ID: %d\n", order.OrderId())
-//     fmt.Printf("Order Type: %s\n", order.OrderType())
-//     fmt.Printf("Side: %s\n", order.Side())
-//     fmt.Printf("Price: %s\n", order.Price().String())
-//     fmt.Printf("Initial Quantity: %s\n", order.InitialQuantity().String())
-//     fmt.Printf("Remaining Quantity: %s\n", order.RemainingQuantity().String())
-// }
