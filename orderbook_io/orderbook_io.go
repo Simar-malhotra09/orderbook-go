@@ -1,75 +1,82 @@
-package orderinput
+package orderbook_io
 
 import (
 	"Desktop/projects/order-book-simulation/go/orderbook"
+	"Desktop/projects/order-book-simulation/go/tickers"
 	"bufio"
 	"fmt"
+	"log"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/shopspring/decimal"
 )
 
+func AddLimitOrder() *orderbook.Order {
+	reader := bufio.NewReader(os.Stdin)
 
-func ProcessLimitOrder() *orderbook.Order {
-    reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter ticker: ")
+	ticker, _ := reader.ReadString('\n')
+	ticker = strings.TrimSpace(ticker)
 
-    fmt.Print("Enter action (A for add, R for remove): ")
-    action, _ := reader.ReadString('\n')
+	tickerID, err := tickers.TickerToID(ticker)
+	if err != nil {
+		fmt.Println("Invalid ticker symbol:", err)
+		return nil
+	}
 
-
-    fmt.Print("Enter ticker: ")
-    ticker, _ := reader.ReadString('\n')
-
-	fmt.Print("Enter orderbook side: ")
-    side, _ := reader.ReadString('\n')
-
-    fmt.Print("Enter price: ")
-    priceStr, _ := reader.ReadString('\n')
-    price, err := decimal.NewFromString(priceStr)
-    if err != nil {
-        fmt.Println("Invalid price, please enter a number.")
-        return nil
-    }
-
-    fmt.Print("Enter size: ")
-    sizeStr, _ := reader.ReadString('\n')
-    size, err := decimal.NewFromString(sizeStr)
-    if err != nil {
-        fmt.Println("Invalid size, please enter a number.")
-        return nil
-    }
-
-    orderID := generateOrderID()
-	tickerID := tickerToID()
-    timestamp := time.Now()
-	side_:= getOrderSide(side)
+	fmt.Print("Enter orderbook side (B for buy, S for sell): ")
+	side, _ := reader.ReadString('\n')
+	side = strings.TrimSpace(side)
+	orderSide := GetOrderSide(side)
 
 
+	fmt.Print("Enter price: ")
+	priceStr, _ := reader.ReadString('\n')
+	priceStr = strings.TrimSpace(priceStr)
+	price, err := decimal.NewFromString(priceStr)
+	if err != nil {
+		fmt.Println("Invalid price. Please enter a number.")
+		return nil
+	}
 
-    // Create a new order
-    newOrder := orderbook.NewOrder(orderID, tickerID, side_,orderbook.GoodTillCancel, price, size,size, timestamp)
+	fmt.Print("Enter size: ")
+	sizeStr, _ := reader.ReadString('\n')
+	sizeStr = strings.TrimSpace(sizeStr)
+	size, err := decimal.NewFromString(sizeStr)
+	if err != nil {
+		fmt.Println("Invalid size. Please enter a number.")
+		return nil
+	}
+
+	orderID := GenerateOrderID()
+	timestamp := time.Now()
+
+	
+	newOrder := orderbook.NewOrder(orderID, tickerID, orderSide, orderbook.GoodTillCancel, price, size, size, timestamp)
+		
+
     return newOrder
 }
 
-func getOrderSide(side string)  orderbook.Side{
-	var side_ orderbook.Side
-	if side == "B" {
-		side_ = orderbook.Buy
-	} else {
-		side_ = orderbook.Sell
+func GetOrderSide(side string) orderbook.Side {
+	switch strings.ToUpper(side) {
+	case "B":
+		return orderbook.Buy
+	case "S":
+		return orderbook.Sell
+	default:
+		return orderbook.Buy
 	}
-
-	return side_
-	
-}
-func generateOrderID() orderbook.OrderId {
-    // Implement a method to generate unique order IDs
-    return orderId 
 }
 
-func tickerToID() orderbook.TickerId {
-  
-    return tickerId
+func GenerateOrderID() orderbook.OrderId {
+	orderID, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("Failed to generate UUID: %v", err)
+	}
+	log.Printf("Generated Order ID: %v", orderID)
+	return orderbook.OrderId(orderID.String())
 }
-

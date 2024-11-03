@@ -1,14 +1,27 @@
 package tickers
 
+import (
+	"Desktop/projects/order-book-simulation/go/orderbook"
+	"errors"
+)
+
+
 
 type Ticker struct {
-	ID       int
+	ID      orderbook.TickerId
 	Symbol   string
 	Name     string
 	Exchange string
 }
 
 
+func TickerToID(symbol string) (orderbook.TickerId, error) {
+	ticker, found := TickerLookup[symbol]
+	if !found {
+		return 0, errors.New("ticker symbol not found")
+	}
+	return ticker.ID, nil
+}
 var TickerLookup = map[string]Ticker{
 	"AAPL":  {ID: 1, Symbol: "AAPL", Name: "Apple Inc.", Exchange: "NASDAQ"},
 	"GOOGL": {ID: 2, Symbol: "GOOGL", Name: "Alphabet Inc.", Exchange: "NASDAQ"},

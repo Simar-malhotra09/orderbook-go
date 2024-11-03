@@ -2,7 +2,6 @@ package orderbook
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -10,7 +9,7 @@ import (
 
 type Price = decimal.Decimal
 type Quantity = decimal.Decimal
-type OrderId int64
+type OrderId string
 type TickerId int64
 type Timestamp = time.Time
 
@@ -65,15 +64,15 @@ func (o *Order) FilledQuantity() Quantity {
     return Quantity(filled)
 }
 
-func (o *Order) Fill(quantity Quantity) error {
-    qty := decimal.Decimal(quantity)
-    remaining := decimal.Decimal(o.RemainingQuantity())
-    if qty.GreaterThan(remaining) {
-        return fmt.Errorf("quantity exceeds remaining quantity for Order ID %d", o.OrderId())
-    }
-    o.remainingQuantity = Quantity(remaining.Sub(qty))
-    return nil
-}
+// func (o *Order) Fill(quantity Quantity) error {
+//     qty := decimal.Decimal(quantity)
+//     remaining := decimal.Decimal(o.RemainingQuantity())
+//     if qty.GreaterThan(remaining) {
+//         return fmt.Errorf("quantity exceeds remaining quantity for Order ID %d", o.OrderId())
+//     }
+//     o.remainingQuantity = Quantity(remaining.Sub(qty))
+//     return nil
+// }
 
 
 func NewOrder(orderId OrderId, tickerId TickerId, side Side, orderType OrderType, price Price, initialQuantity Quantity, remainingQuantity Quantity, timestamp Timestamp) *Order {
