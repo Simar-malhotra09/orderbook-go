@@ -56,5 +56,12 @@ func main() {
 	
 	// Print the JSON representation of the OrderSide
 	fmt.Println(string(orderSideJSON))
+
+	orderBookJSON,err:= orderBook.MarshalJSON()
+	if err != nil{
+		log.Fatalf("Error marshalling orderbook to JSON: %v", err)
+	}
+	// Print the JSON representation of the OrderSide
+	fmt.Println(string(orderBookJSON))
 }
 
